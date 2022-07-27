@@ -8,12 +8,13 @@ import librosa
 import numpy as np
 
 class DatasetMix(torch.utils.data.Dataset):
-    def __init__(self, dir_clean,path_noise,sec=1.0):
+    def __init__(self, dir_clean,path_noise,sec=1.0,device="cuda:0"):
         self.list_clean = glob.glob(os.path.join(dir_clean,"*.wav"))
 
         self.noise,_ = librosa.load(path_noise,sr=16000)
 
         self.len_item = int(sec*16000)
+        self.device = device
 
         print("Dataset:: {} clean data from {} | noise : {}  ".format(len(self.list_clean),dir_clean,self.noise.shape))
 
@@ -35,7 +36,6 @@ class DatasetMix(torch.utils.data.Dataset):
         # noise sampling
         idx_noise = np.random.randint(len(self.noise)-self.len_item)
         tmp_noise = self.noise[idx_noise:idx_noise+self.len_item]
-
 
         # SNR
         SNR = np.random.rand()*10
@@ -60,15 +60,17 @@ class DatasetMix(torch.utils.data.Dataset):
         clean = torch.from_numpy(clean)
 
         noisy_spec =  torch.stft(noisy,n_fft=512,return_complex=True,center=True)
+
         noisy_mag = torch.abs(noisy_spec)
         noisy_phase = torch.angle(noisy_spec)
 
-        #noisy_mag = torch.unsqueeze(noisy_mag,dim=0)
-        #noisy_phase = torch.unsqueeze(noisy_phase,dim=0)
+        noisy_mag = torch.unsqueeze(noisy_mag,dim=0)
+        noisy_phase = torch.unsqueeze(noisy_phase,dim=0)
 
         data = {}
 
         data["clean_wav"] = clean
+        data["noisy_wav"] = noisy
         data["noisy_mag"] = noisy_mag
         data["noisy_phase"] = noisy_phase
 
@@ -78,12 +80,13 @@ class DatasetMix(torch.utils.data.Dataset):
         return len(self.list_clean)
 
 class DatasetFix(torch.utils.data.Dataset):
-    def __init__(self, dir_dataset):
+    def __init__(self, dir_dataset,device="cuda:0"):
         self.list_clean = glob.glob(os.path.join(dir_dataset,"clean","*.wav"))
 
         self.dir_dataset = dir_dataset
+        self.device = device
 
-        print("Dataset:: {} clean data from {} | noise : {}  ".format(len(self.list_clean),dir_dataset))
+        print("Dataset:: {} clean data from {}".format(len(self.list_clean),dir_dataset))
 
     def __getitem__(self, idx):
 
@@ -93,7 +96,7 @@ class DatasetFix(torch.utils.data.Dataset):
 
         name_clean = path_clean.split("/")[-1]
 
-        noise,_ = librosa.load(os.path.join(self.dir_dataset,"noisy",name_clean),sr=16000)
+        noisy,_ = librosa.load(os.path.join(self.dir_dataset,"noisy",name_clean),sr=16000)
         
         noisy = torch.from_numpy(noisy)
         clean = torch.from_numpy(clean)
@@ -102,12 +105,13 @@ class DatasetFix(torch.utils.data.Dataset):
         noisy_mag = torch.abs(noisy_spec)
         noisy_phase = torch.angle(noisy_spec)
 
-        #noisy_mag = torch.unsqueeze(noisy_mag,dim=0)
-        #noisy_phase = torch.unsqueeze(noisy_phase,dim=0)
+        noisy_mag = torch.unsqueeze(noisy_mag,dim=0)
+        noisy_phase = torch.unsqueeze(noisy_phase,dim=0)
 
         data = {}
 
         data["clean_wav"] = clean
+        data["noisy_wav"] = noisy
         data["noisy_mag"] = noisy_mag
         data["noisy_phase"] = noisy_phase
 

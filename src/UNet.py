@@ -87,20 +87,19 @@ class UNet(nn.Module):
         for i, encoder in enumerate(self.encoders):
             x_skip.append(self.res_paths[i](x))
             x = encoder(x)
-            print("Encoder {} : {}".format(i,x.shape))
+            #print("Encoder {} : {}".format(i,x.shape))
 
         p = x
         
         # Decoders
         for i, decoder in enumerate(self.decoders):
             p = decoder(p)
-            print("Decoder {} : {}".format(i,p.shape))
+            #print("Decoder {} : {}".format(i,p.shape))
             # last layer of Decorders
             if i == self.len_model- 1:
                 break
             p = torch.cat([p, x_skip[self.len_model - 1 - i]], dim=1)
-            print("Decoder cat {} : {}".format(i,p.shape))
-
+            #print("Decoder cat {} : {}".format(i,p.shape))
 
         mask = self.linear(p)
         mask = self.activation_mask(mask)
