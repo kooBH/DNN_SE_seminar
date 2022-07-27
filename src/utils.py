@@ -78,7 +78,8 @@ def train(model,dataset_train,dataset_dev,criterion,device="cuda:0"):
     history_test=[]
 
     test_loss =0.
-    for epoch in (pbar := tqdm(range(num_epochs),desc="epoch")):
+    pbar = tqdm(range(num_epochs),desc="epoch")
+    for epoch in pbar : 
         ### TRAIN ####
         model.train()
         train_loss=0
