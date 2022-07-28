@@ -50,7 +50,7 @@ def infer(data,model,device="cuda:0") :
     estim_wav = estim_wav.detach().cpu().numpy()
     estim_wav = estim_wav/np.max(np.abs(estim_wav))
 
-    return data["clean_wav"],data["noisy_wav"],estim_wav[0]
+    return data["clean_wav"].numpy(),data["noisy_wav"].numpy(),estim_wav[0]
 
 
 def train(model,dataset_train,dataset_dev,criterion,device="cuda:0"):
