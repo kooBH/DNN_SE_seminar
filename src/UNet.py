@@ -58,7 +58,7 @@ class UNet(nn.Module):
         self.res_paths.append(module)
             
         ## Bottlenect
-        bottlenecks = []
+        self.bottlenecks = []
         if bottlenecks is not None :
             for i in range(len(bottlenecks)):
                 module = bottlenecks[i]
@@ -94,6 +94,10 @@ class UNet(nn.Module):
                 print("Encoder {} : {}".format(i,x.shape))
 
         p = x
+        for i, bottleneck in enumerate(self.bottlenecks):
+            p  =  bottleneck(p)
+            if self.print_shape : 
+                print("bottleneck {} : {}".format(i,p.shape))
         
         # Decoders
         for i, decoder in enumerate(self.decoders):
