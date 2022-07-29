@@ -5,6 +5,9 @@ from matplotlib import cm
 import numpy as np
 import librosa
 
+from pesq import pesq
+from pesq import NoUtterancesError   
+
 def get_output_wav(estim_mask,noisy_mag,noisy_phase,n_fft=512):
     estim_mag = estim_mask * noisy_mag
     estim_spec = estim_mag * (noisy_phase*1j)
@@ -141,3 +144,22 @@ def plot_spec(wav,title=""):
     
     plt.xlabel('Time')
     plt.ylabel('Freq')
+
+
+def eval(dataset,model):
+    model.eval()
+    with torch.no_grad():    
+        pesq_estim = 0
+        pesq_noisy = 0
+        cnt = 0
+        for i in tqdm(range(len(dataset))) :
+            clean,noisy,estim = infer(dataset[i],model)
+            try : 
+                pesq_noisy+= pesq(16000,clean, noisy, "wb")
+                pesq_estim += pesq(16000,clean, estim, "wb")
+                cnt+=1
+            except NoUtterancesError : 
+                continue
+        pesq_estim /=cnt
+        pesq_noisy /=cnt
+        print("PESQ : {} -> {}".format(pesq_noisy,pesq_estim))
